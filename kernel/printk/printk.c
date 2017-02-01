@@ -46,6 +46,7 @@
 #include <linux/ctype.h>
 #include <linux/uio.h>
 #include <soc/qcom/boot_stats.h>
+#include <linux/sched/clock.h>
 
 #include <linux/uaccess.h>
 #include <asm/sections.h>
