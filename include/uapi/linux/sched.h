@@ -48,6 +48,7 @@
  * For the sched_{set,get}attr() calls
  */
 #define SCHED_FLAG_RESET_ON_FORK	0x01
+#define SCHED_FLAG_RECLAIM		0x02
 #define SCHED_FLAG_KEEP_POLICY		0x08
 #define SCHED_FLAG_KEEP_PARAMS		0x10
 #define SCHED_FLAG_UTIL_CLAMP_MIN	0x20
