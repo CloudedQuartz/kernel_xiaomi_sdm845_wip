@@ -32,6 +32,7 @@
  */
 
 #include <linux/cpu.h>
+#include <linux/delay.h>
 #include <linux/export.h>
 #include <linux/percpu.h>
 #include <linux/hrtimer.h>
@@ -1049,8 +1050,7 @@ int hrtimer_cancel(struct hrtimer *timer)
 
 		if (ret >= 0)
 			return ret;
-		cpu_relax();
-		ndelay(TIMER_LOCK_TIGHT_LOOP_DELAY_NS);
+		udelay(1);
 	}
 }
 EXPORT_SYMBOL_GPL(hrtimer_cancel);
