@@ -8941,6 +8941,14 @@ static void attach_tasks(struct lb_env *env)
 	raw_spin_unlock(&env->dst_rq->lock);
 }
 
+static inline bool rt_rq_has_blocked(struct rq *rq)
+{
+	if (READ_ONCE(rq->avg_rt.util_avg))
+		return true;
+
+	return false;
+}
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
 static void update_blocked_averages(int cpu)
 {
@@ -8970,6 +8978,7 @@ static void update_blocked_averages(int cpu)
 		if (se && !skip_blocked_update(se))
 			update_load_avg(se, 0);
 	}
+
 	rq->last_blocked_load_update_tick = jiffies;
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 }
