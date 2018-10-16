@@ -3163,12 +3163,16 @@ extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
 
 #define find_first_cpu_bit(...) -1
 
-#ifdef CONFIG_SMP
-#ifdef CONFIG_ENERGY_MODEL
+#if defined(CONFIG_ENERGY_MODEL) && defined(CONFIG_CPU_FREQ_GOV_SCHEDUTIL)
 #define perf_domain_span(pd) (to_cpumask(((pd)->obj->cpus)))
-#else
+
+static inline unsigned long cpu_util_rt(struct rq *rq)
+{
+	return READ_ONCE(rq->avg_rt.util_avg);
+}
+
+#else /* CONFIG_ENERGY_MODEL && CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
 #define perf_domain_span(pd) NULL
-#endif
 #endif
 
 static inline void sched_irq_work_queue(struct irq_work *work)
@@ -3177,11 +3181,6 @@ static inline void sched_irq_work_queue(struct irq_work *work)
 		irq_work_queue(work);
 	else
 		irq_work_queue_on(work, cpumask_any(cpu_online_mask));
-}
-
-static inline unsigned long cpu_util_rt(struct rq *rq)
-{
-	return READ_ONCE(rq->avg_rt.util_avg);
 }
 
 #ifdef HAVE_SCHED_AVG_IRQ
