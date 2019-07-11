@@ -61,6 +61,8 @@
 
 static struct kmem_cache *kmem_vblank_work_pool;
 
+static struct kmem_cache *kmem_vblank_work_pool;
+
 static void msm_fb_output_poll_changed(struct drm_device *dev)
 {
 	struct msm_drm_private *priv = NULL;
