@@ -178,8 +178,6 @@ static unsigned long limits_mitigation_notify(struct limits_dcvs_hw *hw)
 	rcu_read_unlock();
 	max_limit = FREQ_HZ_TO_KHZ(freq_val);
 
-	sched_update_cpu_freq_min_max(&hw->core_map, 0, max_limit);
-
 	get_online_cpus();
 	for_each_online_cpu(i) {
 		pr_debug("Updating policy for cpu%d\n", i);
