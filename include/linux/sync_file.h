@@ -34,7 +34,6 @@
 struct sync_file {
 	struct file		*file;
 	struct kref		kref;
-	char			name[32];
 #ifdef CONFIG_DEBUG_FS
 	struct list_head	sync_file_list;
 #endif
