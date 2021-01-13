@@ -99,6 +99,8 @@ struct clk_osm {
 	u32 mx_turbo_freq;
 };
 
+static bool pwrcl_oc;
+
 static bool is_sdm845v1;
 
 static inline struct clk_osm *to_clk_osm(struct clk_hw *_hw)
@@ -792,6 +794,50 @@ static int osm_cpufreq_cpu_init(struct cpufreq_policy *policy)
 		lval = data & GENMASK(7, 0);
 		core_count = CORE_COUNT_VAL(data);
 
+		if(!pwrcl_oc){
+			if (i == 18) { 
+				src = 1;
+				div = 0;
+				lval = 96;
+				core_count = 1;
+			}
+			if (i == 19) {
+				src = 1;
+				div = 0;
+				lval = 101;
+				core_count = 1;
+			}
+			if (i >= 20) {
+				src = 1;
+				div = 0;
+				lval = 105;
+				core_count = 1;
+			}
+			if (i > 20){
+				pwrcl_oc = true;
+			}
+		}
+
+		if (i == 27) { 
+			src = 1;
+			div = 0;
+			lval = 148;
+			core_count = 1;
+		}
+		if (i == 28) {
+			src = 1;
+			div = 0;
+			lval = 154;
+			core_count = 1;
+		}
+		if (i >= 29) {
+			src = 1;
+			div = 0;
+			lval = 10000;
+			core_count = 1;
+		}
+
+
 		if (!src)
 			table[i].frequency = OSM_INIT_RATE / 1000;
 		else
@@ -1059,6 +1105,50 @@ static int clk_osm_read_lut(struct platform_device *pdev, struct clk_osm *c)
 	u32 data, src, lval, i, j = OSM_TABLE_SIZE;
 	struct clk_vdd_class *vdd = osm_clks_init[c->cluster_num].vdd_class;
 
+	struct osm_entry pwrcl_oc_clk1 = {
+		.lval = 96,
+		.ccount = 1,
+		.frequency = 1843200000,
+		.virtual_corner = 19,
+		.open_loop_volt = 815,
+	};
+	struct osm_entry pwrcl_oc_clk2 = {
+		.lval = 101,
+		.ccount = 1,
+		.frequency = 1939200000,
+		.virtual_corner = 20,
+		.open_loop_volt = 850,
+	};
+	struct osm_entry pwrcl_oc_clk3 = {
+		.lval = 105,
+		.ccount = 1,
+		.frequency = 2016000000,
+		.virtual_corner = 21,
+		.open_loop_volt = 880,
+	};
+
+	struct osm_entry perfcl_oc_clk1 = {
+		.lval = 148,
+		.ccount = 1,
+		.frequency = 2841600000,
+		.virtual_corner = 28,
+		.open_loop_volt = 1029,
+	};
+	struct osm_entry perfcl_oc_clk2 = {
+		.lval = 154,
+		.ccount = 1,
+		.frequency = 2956800000,
+		.virtual_corner = 29,
+		.open_loop_volt = 1063,
+	};
+	struct osm_entry perfcl_oc_clk3 = {
+		.lval = 10000,
+		.ccount = 1,
+		.frequency = 192000000,
+		.virtual_corner = 30,
+		.open_loop_volt = 1086,
+	};
+
 	for (i = 0; i < OSM_TABLE_SIZE; i++) {
 		data = clk_osm_read_reg(c, FREQ_REG + i * OSM_REG_SIZE);
 		src = ((data & GENMASK(31, 30)) >> 30);
@@ -1086,6 +1176,19 @@ static int clk_osm_read_lut(struct platform_device *pdev, struct clk_osm *c)
 					c->osm_table[i - 1].frequency &&
 			c->osm_table[i].ccount == c->osm_table[i - 1].ccount)
 			j = i;
+	}
+
+	if (strncmp(c->hw.init->name, "pwrcl_clk", 9) == 0) {
+		c->osm_table[18] = pwrcl_oc_clk1;
+		c->osm_table[19] = pwrcl_oc_clk2;
+		c->osm_table[20] = pwrcl_oc_clk3;
+		j+=3;
+	}
+	if (strncmp(c->hw.init->name, "perfcl_clk", 10) == 0) {
+		c->osm_table[27] = perfcl_oc_clk1;
+		c->osm_table[28] = perfcl_oc_clk2;
+		c->osm_table[29] = perfcl_oc_clk3;
+		j+=3;
 	}
 
 	osm_clks_init[c->cluster_num].rate_max = devm_kcalloc(&pdev->dev,
