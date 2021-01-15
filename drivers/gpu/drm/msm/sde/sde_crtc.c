@@ -158,7 +158,6 @@ static void sde_crtc_calc_fps(struct sde_crtc *sde_crtc)
 
 		 /* Multiplying with 10 to get fps in floating point */
 		fps = 120;
-		do_div(fps, diff_us);
 		sde_crtc->fps_info.measured_fps = (unsigned int)fps;
 		SDE_DEBUG(" FPS for crtc%d is %d.%d\n",
 				sde_crtc->base.base.id, (unsigned int)fps/10,
