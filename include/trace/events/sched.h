@@ -1384,6 +1384,7 @@ TRACE_EVENT(sched_load_avg_task,
 		__field( int,	cpu				)
 		__field( unsigned long,	load_avg		)
 		__field( unsigned long,	util_avg		)
+		__field( u32,		util_avg_walt		)
 		__field( u64,		load_sum		)
 		__field( u32,		util_sum		)
 		__field( u32,		period_contrib		)
@@ -1398,6 +1399,7 @@ TRACE_EVENT(sched_load_avg_task,
 		__entry->load_sum		= avg->load_sum;
 		__entry->util_sum		= avg->util_sum;
 		__entry->period_contrib		= avg->period_contrib;
+		__entry->util_avg_walt  = 0;
 #ifdef CONFIG_SCHED_WALT
 		__entry->util_avg_walt = ((struct ravg*)_ravg)->demand /
 					 (sched_ravg_window >> SCHED_CAPACITY_SHIFT);
@@ -1405,12 +1407,13 @@ TRACE_EVENT(sched_load_avg_task,
 #endif
 	),
 	TP_printk("comm=%s pid=%d cpu=%d load_avg=%lu util_avg=%lu "
-		  "load_sum=%llu util_sum=%u period_contrib=%u",
+		  "util_avg_walt=%u load_sum=%llu util_sum=%u period_contrib=%u",
 		  __entry->comm,
 		  __entry->pid,
 		  __entry->cpu,
 		  __entry->load_avg,
 		  __entry->util_avg,
+		  __entry->util_avg_walt,
 		  (u64)__entry->load_sum,
 		  (u32)__entry->util_sum,
 		  (u32)__entry->period_contrib)
@@ -1429,16 +1432,23 @@ TRACE_EVENT(sched_load_avg_cpu,
 		__field( int,	cpu				)
 		__field( unsigned long,	load_avg		)
 		__field( unsigned long,	util_avg		)
+		__field( u32,		util_avg_walt		)
 	),
 
 	TP_fast_assign(
 		__entry->cpu			= cpu;
 		__entry->load_avg		= cfs_rq->avg.load_avg;
 		__entry->util_avg		= cfs_rq->avg.util_avg;
+		__entry->util_avg_walt	= 0;
+#ifdef CONFIG_SCHED_WALT
+		__entry->util_avg_walt = div64_ul(cpu_rq(cpu)->prev_runnable_sum,
+										  sched_ravg_window >> SCHED_CAPACITY_SHIFT);
+		__entry->util_avg		= __entry->util_avg_walt;
+#endif
 	),
 
-	TP_printk("cpu=%d load_avg=%lu util_avg=%lu ",
-		  __entry->cpu, __entry->load_avg, __entry->util_avg)
+	TP_printk("cpu=%d load_avg=%lu util_avg=%lu  util_avg_walt=%u",
+		  __entry->cpu, __entry->load_avg, __entry->util_avg, __entry->util_avg_walt)
 );
 
 /*
