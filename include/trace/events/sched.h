@@ -586,7 +586,7 @@ TRACE_EVENT(sched_load_to_gov,
 		__entry->grp_rq_ps	= rq->grp_time.prev_runnable_sum;
 		__entry->nt_ps		= rq->nt_prev_runnable_sum;
 		__entry->grp_nt_ps	= rq->grp_time.nt_prev_runnable_sum;
-		__entry->pl		= rq->walt_stats.pred_demands_sum;
+		__entry->pl		= rq->walt_stats.pred_demands_sum_scaled;
 		__entry->load		= load;
 		__entry->big_task_rotation = big_task_rotation;
 		__entry->sysctl_sched_little_cluster_coloc_fmin_khz =
