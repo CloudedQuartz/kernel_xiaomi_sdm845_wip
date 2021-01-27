@@ -7367,7 +7367,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 
 			fbt_env->fastpath = PREV_CPU_FASTPATH;
 			trace_sched_find_best_target(p, prefer_idle, min_util,
-					cpu, -1, -1, -1, target_cpu, -1, boosted);
+					cpu, -1, -1, target_cpu, -1);
 			goto out;
 		}
 	}
