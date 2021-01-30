@@ -153,20 +153,12 @@ extern u64 nr_running_integral(unsigned int cpu);
 
 #ifdef CONFIG_SMP
 extern void sched_update_nr_prod(int cpu, long delta, bool inc);
-extern void sched_get_nr_running_avg(int *avg, int *iowait_avg, int *big_avg,
-				     unsigned int *max_nr,
-				     unsigned int *big_max_nr);
 extern unsigned int sched_get_cpu_util(int cpu);
 extern u64 sched_get_cpu_last_busy_time(int cpu);
 extern u32 sched_get_wake_up_idle(struct task_struct *p);
 extern int sched_set_wake_up_idle(struct task_struct *p, int wake_up_idle);
 #else
 static inline void sched_update_nr_prod(int cpu, long delta, bool inc)
-{
-}
-static inline void sched_get_nr_running_avg(int *avg, int *iowait_avg,
-				int *big_avg, unsigned int *max_nr,
-				unsigned int *big_max_nr)
 {
 }
 static inline unsigned int sched_get_cpu_util(int cpu)
@@ -1043,6 +1035,34 @@ struct sched_capacity_reqs {
 	unsigned long total;
 };
 
+/**
+ * struct util_est - Estimation utilization of FAIR tasks
+ * @enqueued: instantaneous estimated utilization of a task/cpu
+ * @ewma:     the Exponential Weighted Moving Average (EWMA)
+ *            utilization of a task
+ *
+ * Support data structure to track an Exponential Weighted Moving Average
+ * (EWMA) of a FAIR task's utilization. New samples are added to the moving
+ * average each time a task completes an activation. Sample's weight is chosen
+ * so that the EWMA will be relatively insensitive to transient changes to the
+ * task's workload.
+ *
+ * The enqueued attribute has a slightly different meaning for tasks and cpus:
+ * - task:   the task's util_avg at last task dequeue time
+ * - cfs_rq: the sum of util_est.enqueued for each RUNNABLE task on that CPU
+ * Thus, the util_est.enqueued of a task represents the contribution on the
+ * estimated utilization of the CPU where that task is currently enqueued.
+ *
+ * Only for tasks we track a moving average of the past instantaneous
+ * estimated utilization. This allows to absorb sporadic drops in utilization
+ * of an otherwise almost periodic task.
+ */
+struct util_est {
+	unsigned int			enqueued;
+	unsigned int			ewma;
+#define UTIL_EST_WEIGHT_SHIFT		2
+};
+
 /*
  * Wake-queues are lists of tasks with a pending wakeup, whose
  * callers have already marked the task as woken internally,
@@ -1128,6 +1148,8 @@ static inline int cpu_numa_flags(void)
 	return SD_NUMA;
 }
 #endif
+
+extern int arch_asym_cpu_priority(int cpu);
 
 struct sched_domain_attr {
 	int relax_domain_level;
@@ -1426,6 +1448,7 @@ struct sched_avg {
 	u64 last_update_time, load_sum;
 	u32 util_sum, period_contrib;
 	unsigned long load_avg, util_avg;
+	struct util_est util_est;
 };
 
 #ifdef CONFIG_SCHEDSTATS
@@ -1584,6 +1607,10 @@ struct sched_rt_entity {
 	unsigned int time_slice;
 	unsigned short on_rq;
 	unsigned short on_list;
+
+	/* Accesses for these must be guarded by rq->lock of the task's rq */
+	bool schedtune_enqueued;
+	struct hrtimer schedtune_timer;
 
 	struct sched_rt_entity *back;
 #ifdef CONFIG_RT_GROUP_SCHED

@@ -136,6 +136,9 @@ struct irq_domain;
  * @affinity:		IRQ affinity on SMP. If this is an IPI
  *			related irq, then this is the mask of the
  *			CPUs to which an IPI can be sent.
+ * @effective_affinity:	The effective IRQ affinity on SMP as some irq
+ *			chips do not allow multi CPU destinations.
+ *			A subset of @affinity.
  * @msi_desc:		MSI descriptor
  * @ipi_offset:		Offset of first IPI target cpu in @affinity. Optional.
  */
@@ -147,6 +150,9 @@ struct irq_common_data {
 	void			*handler_data;
 	struct msi_desc		*msi_desc;
 	cpumask_var_t		affinity;
+#ifdef CONFIG_GENERIC_IRQ_EFFECTIVE_AFF_MASK
+	cpumask_var_t		effective_affinity;
+#endif
 #ifdef CONFIG_GENERIC_IRQ_IPI
 	unsigned int		ipi_offset;
 #endif
@@ -199,6 +205,7 @@ struct irq_data {
  * IRQD_WAKEUP_ARMED		- Wakeup mode armed
  * IRQD_FORWARDED_TO_VCPU	- The interrupt is forwarded to a VCPU
  * IRQD_AFFINITY_MANAGED	- Affinity is auto-managed by the kernel
+ * IRQD_SINGLE_TARGET		- IRQ allows only a single affinity target
  */
 enum {
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -216,6 +223,7 @@ enum {
 	IRQD_WAKEUP_ARMED		= (1 << 19),
 	IRQD_FORWARDED_TO_VCPU		= (1 << 20),
 	IRQD_AFFINITY_MANAGED		= (1 << 21),
+	IRQD_SINGLE_TARGET		= (1 << 24),
 };
 
 #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
@@ -262,6 +270,20 @@ static inline void irqd_set_trigger_type(struct irq_data *d, u32 type)
 static inline bool irqd_is_level_type(struct irq_data *d)
 {
 	return __irqd_to_state(d) & IRQD_LEVEL;
+}
+
+/*
+ * Must only be called of irqchip.irq_set_affinity() or low level
+ * hieararchy domain allocation functions.
+ */
+static inline void irqd_set_single_target(struct irq_data *d)
+{
+	__irqd_to_state(d) |= IRQD_SINGLE_TARGET;
+}
+
+static inline bool irqd_is_single_target(struct irq_data *d)
+{
+	return __irqd_to_state(d) & IRQD_SINGLE_TARGET;
 }
 
 static inline bool irqd_is_wakeup_set(struct irq_data *d)
@@ -503,16 +525,16 @@ static inline int irq_set_parent(int irq, int parent_irq)
  * Built-in IRQ handlers for various IRQ types,
  * callable via desc->handle_irq()
  */
-extern void handle_level_irq(struct irq_desc *desc);
-extern void handle_fasteoi_irq(struct irq_desc *desc);
-extern void handle_edge_irq(struct irq_desc *desc);
-extern void handle_edge_eoi_irq(struct irq_desc *desc);
-extern void handle_simple_irq(struct irq_desc *desc);
-extern void handle_untracked_irq(struct irq_desc *desc);
-extern void handle_percpu_irq(struct irq_desc *desc);
-extern void handle_percpu_devid_irq(struct irq_desc *desc);
-extern void handle_bad_irq(struct irq_desc *desc);
-extern void handle_nested_irq(unsigned int irq);
+extern bool handle_level_irq(struct irq_desc *desc);
+extern bool handle_fasteoi_irq(struct irq_desc *desc);
+extern bool handle_edge_irq(struct irq_desc *desc);
+extern bool handle_edge_eoi_irq(struct irq_desc *desc);
+extern bool handle_simple_irq(struct irq_desc *desc);
+extern bool handle_untracked_irq(struct irq_desc *desc);
+extern bool handle_percpu_irq(struct irq_desc *desc);
+extern bool handle_percpu_devid_irq(struct irq_desc *desc);
+extern bool handle_bad_irq(struct irq_desc *desc);
+extern bool handle_nested_irq(unsigned int irq);
 
 extern int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg);
 extern int irq_chip_pm_get(struct irq_data *data);
@@ -726,6 +748,29 @@ static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
 {
 	return d->common->affinity;
 }
+
+#ifdef CONFIG_GENERIC_IRQ_EFFECTIVE_AFF_MASK
+static inline
+struct cpumask *irq_data_get_effective_affinity_mask(struct irq_data *d)
+{
+	return d->common->effective_affinity;
+}
+static inline void irq_data_update_effective_affinity(struct irq_data *d,
+						      const struct cpumask *m)
+{
+	cpumask_copy(d->common->effective_affinity, m);
+}
+#else
+static inline void irq_data_update_effective_affinity(struct irq_data *d,
+						      const struct cpumask *m)
+{
+}
+static inline
+struct cpumask *irq_data_get_effective_affinity_mask(struct irq_data *d)
+{
+	return d->common->affinity;
+}
+#endif
 
 unsigned int arch_dynirq_lower_bound(unsigned int from);
 
