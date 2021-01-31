@@ -8,10 +8,11 @@
 
 # Config
 CURRENT_DIR="$(pwd)"
-KERNELNAME="Common"
+KERNELNAME="Delta"
 KERNEL_DIR="$CURRENT_DIR"
-AK_REPO="https://github.com/xiaomi-sdm845-devel/AnyKernel3"
+AK_REPO="https://github.com/TheStaticDesign/AnyKernel3"
 AK_DIR="$HOME/AnyKernel3"
+AK_BRANCH="sdm845"
 TC_DIR="$HOME"
 # End Config
 
@@ -23,7 +24,7 @@ clone_tc() {
 
 # Clones anykernel
 clone_ak() {
-	git clone $AK_REPO $AK_DIR
+	git clone $AK_REPO $AK_DIR -b $AK_BRANCH
 }
 # Actually do stuff
 clone_tc
