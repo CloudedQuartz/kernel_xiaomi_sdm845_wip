@@ -12,3 +12,9 @@
  * GNU General Public License for more details.
  */
 #include "polaris-p3.dtsi"
+
+&soc {
+	restart@10ac000 {
+		qcom,force-warm-reboot;
+	};
+};
