@@ -65,9 +65,7 @@ build_config() {
 # only use after runing build_setup()
 build_kernel() {
 
-    make O=out $DEFCONFIG -j$(nproc --all)
     BUILD_START=$(date +"%s")
-	echo $TC_DIR
     make -j$(nproc --all) O=out \
                 PATH="$TC_DIR/bin:$PATH" \
                 CC="clang" \
@@ -124,16 +122,19 @@ tg_sendinfo "-- Build Triggered --
 $CAPTION"
 
 # Build device 1
-build_setup $DEFCONFIG
+build_setup
+build_config $DEFCONFIG
 build_kernel
 build_end $DEVICE
 
-# Build device 1
-build_setup $DEFCONFIG2
+# Build device 2
+build_setup
+build_config $DEFCONFIG2
 build_kernel
 build_end $DEVICE2
 
-# Build device 1
-build_setup $DEFCONFIG3
+# Build device 3
+build_setup
+build_config $DEFCONFIG3
 build_kernel
 build_end $DEVICE3
