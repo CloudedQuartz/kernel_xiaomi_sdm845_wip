@@ -5,7 +5,7 @@
 #
 
 # Config
-DEVICE="beryllium"
+DEVICE="beryllium_freqbench"
 DEVICE2="polaris"
 DEVICE3="dipper"
 DEFCONFIG="${DEVICE}_defconfig"
@@ -126,13 +126,13 @@ build_kernel
 build_end $DEVICE
 
 # Build device 2
-build_setup
-build_config $DEFCONFIG2
-build_kernel
-build_end $DEVICE2
+#build_setup
+#build_config $DEFCONFIG2
+#build_kernel
+#build_end $DEVICE2
 
 # Build device 3
-build_setup
-build_config $DEFCONFIG3
-build_kernel
-build_end $DEVICE3
+#build_setup
+#build_config $DEFCONFIG3
+#build_kernel
+#build_end $DEVICE3
