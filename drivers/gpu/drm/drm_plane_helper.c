@@ -220,6 +220,14 @@ EXPORT_SYMBOL(drm_plane_helper_check_state);
  * RETURNS:
  * Zero if update appears valid, error code on failure
  */
+
+ /*
+    Ignore unininialized warning here as "visible" is initialized
+    before use.
+ */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
 int drm_plane_helper_check_update(struct drm_plane *plane,
 				  struct drm_crtc *crtc,
 				  struct drm_framebuffer *fb,
@@ -264,6 +272,7 @@ int drm_plane_helper_check_update(struct drm_plane *plane,
 	return 0;
 }
 EXPORT_SYMBOL(drm_plane_helper_check_update);
+#pragma GCC diagnostic pop // -Wuninitialized
 
 /**
  * drm_primary_helper_update() - Helper for primary plane update
