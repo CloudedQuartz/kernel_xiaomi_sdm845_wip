@@ -3184,10 +3184,6 @@ static inline unsigned long cpu_util_rt(struct rq *rq)
 
 #else /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
 #define perf_domain_span(pd) NULL
-static inline unsigned long schedutil_energy_util(int cpu, unsigned long cfs)
-{
-	return cfs;
-}
 #endif
 
 static inline void sched_irq_work_queue(struct irq_work *work)
@@ -3249,7 +3245,13 @@ static inline unsigned long schedutil_energy_util(int cpu, unsigned long util)
 
 	return schedutil_freq_util(cpu, util, max, ENERGY_UTIL);
 }
+#else /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
+static inline unsigned long schedutil_energy_util(int cpu, unsigned long cfs)
+{
+	return cfs;
+}
 #endif /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
+
 static inline unsigned long cpu_bw_dl(struct rq *rq)
 {
 	return (rq->dl.running_bw * SCHED_CAPACITY_SCALE) >> BW_SHIFT;
