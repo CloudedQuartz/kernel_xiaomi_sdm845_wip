@@ -3184,13 +3184,6 @@ static inline unsigned long cpu_util_rt(struct rq *rq)
 	return READ_ONCE(rq->avg_rt.util_avg);
 }
 
-#else /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
-static inline unsigned long schedutil_energy_util(int cpu, unsigned long cfs)
-{
-	return cfs;
-}
-#endif
-
 #ifdef HAVE_SCHED_AVG_IRQ
 static inline unsigned long cpu_util_irq(struct rq *rq)
 {
@@ -3242,6 +3235,14 @@ static inline unsigned long schedutil_energy_util(int cpu, unsigned long cfs)
 
 	return schedutil_freq_util(cpu, cfs, max, ENERGY_UTIL);
 }
+
+#else /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
+
+static inline unsigned long schedutil_energy_util(int cpu, unsigned long cfs)
+{
+	return cfs;
+}
+
 #endif /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
 static inline unsigned long cpu_bw_dl(struct rq *rq)
 {
