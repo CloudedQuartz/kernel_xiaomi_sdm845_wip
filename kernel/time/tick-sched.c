@@ -689,6 +689,7 @@ static inline bool local_timer_softirq_pending(void)
 	return local_softirq_pending() & BIT(TIMER_SOFTIRQ);
 }
 
+#ifdef CONFIG_NO_HZ_FULL
 static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
 					 ktime_t now, int cpu)
 {
@@ -792,11 +793,9 @@ static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
 		delta = KTIME_MAX;
 	}
 
-#ifdef CONFIG_NO_HZ_FULL
 	/* Limit the tick delta to the maximum scheduler deferment */
 	if (!ts->inidle)
 		delta = min(delta, scheduler_tick_max_deferment());
-#endif
 
 	/* Calculate the next expiry time */
 	if (delta < (KTIME_MAX - basemono))
@@ -847,6 +846,7 @@ out:
 	ts->sleep_length = ktime_sub(dev->next_event, now);
 	return tick;
 }
+#endif
 
 static void tick_nohz_restart_sched_tick(struct tick_sched *ts, ktime_t now)
 {
