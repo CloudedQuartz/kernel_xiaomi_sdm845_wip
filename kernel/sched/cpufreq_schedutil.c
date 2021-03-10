@@ -120,7 +120,7 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	return delta_ns >= sg_policy->freq_update_delay_ns;
 }
 
-static bool sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
+static bool __maybe_unused sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
 				     unsigned int next_freq)
 {
 	s64 delta_ns;
@@ -534,7 +534,7 @@ static void sugov_update_single(struct update_util_data *hook, u64 time,
 {
 	struct sugov_cpu *sg_cpu = container_of(hook, struct sugov_cpu, update_util);
 	struct sugov_policy *sg_policy = sg_cpu->sg_policy;
-	struct cpufreq_policy *policy = sg_policy->policy;
+	struct cpufreq_policy *policy __maybe_unused = sg_policy->policy;
 	unsigned long util, max;
 	unsigned int next_f;
 	bool busy;
