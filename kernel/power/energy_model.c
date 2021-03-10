@@ -93,7 +93,7 @@ static const struct sysfs_ops em_pd_sysfs_ops = {
 	.show	= show,
 };
 
-static struct kobj_type ktype_em_pd = {
+static struct kobj_type ktype_em_pd __maybe_unused = {
 	.sysfs_ops	= &em_pd_sysfs_ops,
 	.default_attrs	= em_pd_default_attrs,
 };
