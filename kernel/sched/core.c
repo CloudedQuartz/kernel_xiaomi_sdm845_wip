@@ -5634,7 +5634,7 @@ static void migrate_tasks(struct rq *dead_rq, struct rq_flags *rf,
 	struct rq *rq = dead_rq;
 	struct task_struct *next, *stop = rq->stop;
 	struct rq_flags orf = *rf;
-	struct pin_cookie cookie;
+	struct pin_cookie cookie __maybe_unused;
 	int dest_cpu;
 	unsigned int num_pinned_kthreads = 1; /* this thread */
 	LIST_HEAD(tasks);
