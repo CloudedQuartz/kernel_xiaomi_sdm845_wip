@@ -56,13 +56,8 @@ unsigned int sysctl_sched_latency			= 6000000ULL;
 unsigned int normalized_sysctl_sched_latency		= 6000000ULL;
 
 unsigned int sysctl_sched_sync_hint_enable = 1;
-
-DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
-
-/*
- * Enable/disable using cstate knowledge in idle sibling selection
- */
 unsigned int sysctl_sched_cstate_aware = 1;
+DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
 
 /*
  * The initial- and re-scaling of tunables is configurable
