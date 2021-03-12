@@ -6867,18 +6867,10 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu)
 	else
 		select_cpu_candidates(sd, candidates, pd, p, prev_cpu);
 
-	/* Bail out if no candidate was found. */
+	/* Bail out if there is no candidate, or if the only one is prev_cpu */
 	weight = cpumask_weight(candidates);
-	if (!weight)
+	if (!weight || (weight == 1 && cpumask_first(candidates) == prev_cpu))
 		goto unlock;
-
-	/* If there is only one sensible candidate, select it now. */
-	cpu = cpumask_first(candidates);
-	if (weight == 1 && ((schedtune_prefer_idle(p) && idle_cpu(cpu)) ||
-			    (cpu == prev_cpu))) {
-		best_energy_cpu = cpu;
-		goto unlock;
-	}
 
 	if (cpumask_test_cpu(prev_cpu, &p->cpus_allowed))
 		prev_energy = best_energy = compute_energy(p, prev_cpu, pd);
