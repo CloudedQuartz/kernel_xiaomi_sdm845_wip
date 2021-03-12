@@ -5305,9 +5305,6 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	struct cfs_rq *cfs_rq;
 	struct sched_entity *se = &p->se;
 	int idle_h_nr_running = idle_policy(p->policy);
-#ifdef CONFIG_SMP
-	int task_new = flags & ENQUEUE_WAKEUP_NEW;
-#endif
 
 #ifdef CONFIG_SCHED_WALT
 	p->misfit = !task_fits_max(p, rq->cpu);
@@ -8021,126 +8018,6 @@ enum fastpaths {
 	PREV_CPU_BIAS,
 };
 
-static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu,
-				   int sync_boost)
-{
-	bool boosted, prefer_idle;
-	struct sched_domain *sd;
-	int target_cpu;
-	int backup_cpu = -1;
-	int next_cpu = -1;
-	struct cpumask *rtg_target = find_rtg_target(p);
-	struct find_best_target_env fbt_env;
-	u64 start_t = 0;
-	int fastpath = 0;
-
-	if (trace_sched_task_util_enabled())
-		start_t = sched_clock();
-
-	schedstat_inc(p->se.statistics.nr_wakeups_secb_attempts);
-	schedstat_inc(this_rq()->eas_stats.secb_attempts);
-
-	rcu_read_lock();
-	boosted = task_is_boosted(p) || per_task_boost(p) > 0;
-#ifdef CONFIG_CGROUP_SCHEDTUNE
-	prefer_idle = schedtune_prefer_idle(p) > 0;
-#else
-	prefer_idle = 0;
-#endif
-
-	fbt_env.rtg_target = rtg_target;
-	fbt_env.need_idle = wake_to_idle(p);
-	fbt_env.placement_boost = task_boost_policy(p);
-
-	if (bias_to_prev_cpu(p, rtg_target)) {
-		target_cpu = prev_cpu;
-		fastpath = PREV_CPU_BIAS;
-		goto unlock;
-	}
-
-	sd = rcu_dereference(per_cpu(sd_ea, prev_cpu));
-	if (!sd) {
-		target_cpu = prev_cpu;
-		goto unlock;
-	}
-
-	sync_entity_load_avg(&p->se);
-
-	/* Find a cpu with sufficient capacity */
-	next_cpu = find_best_target(p, &backup_cpu, boosted || sync_boost,
-				    prefer_idle, &fbt_env);
-	if (next_cpu == -1) {
-		target_cpu = prev_cpu;
-		goto unlock;
-	}
-
-	if (fbt_env.placement_boost || fbt_env.need_idle ||
-			(rtg_target && (!cpumask_test_cpu(prev_cpu, rtg_target) ||
-			cpumask_test_cpu(next_cpu, rtg_target)))) {
-		target_cpu = next_cpu;
-		goto unlock;
-	}
-
-	/* Unconditionally prefer IDLE CPUs for boosted/prefer_idle tasks */
-	if ((boosted || prefer_idle) && idle_cpu(next_cpu)) {
-		schedstat_inc(p->se.statistics.nr_wakeups_secb_idle_bt);
-		schedstat_inc(this_rq()->eas_stats.secb_idle_bt);
-		target_cpu = next_cpu;
-		goto unlock;
-	}
-
-	target_cpu = prev_cpu;
-	if (next_cpu != prev_cpu) {
-		int delta = 0;
-		struct energy_env eenv = {
-			.p              = p,
-			.util_delta     = task_util_est(p),
-			/* Task's previous CPU candidate */
-			.cpu[EAS_CPU_PRV] = {
-				.cpu_id = prev_cpu,
-			},
-			/* Main alternative CPU candidate */
-			.cpu[EAS_CPU_NXT] = {
-				.cpu_id = next_cpu,
-			},
-			/* Backup alternative CPU candidate */
-			.cpu[EAS_CPU_BKP] = {
-				.cpu_id = backup_cpu,
-			},
-		};
-
-
-#ifdef CONFIG_SCHED_WALT
-		if (!walt_disabled && sysctl_sched_use_walt_cpu_util &&
-			p->state == TASK_WAKING)
-			delta = task_util_est(p);
-#endif
-		/* Check if EAS_CPU_NXT is a more energy efficient CPU */
-		if (select_energy_cpu_idx(&eenv) != EAS_CPU_PRV) {
-			schedstat_inc(p->se.statistics.nr_wakeups_secb_nrg_sav);
-			schedstat_inc(this_rq()->eas_stats.secb_nrg_sav);
-			target_cpu = eenv.cpu[eenv.next_idx].cpu_id;
-			goto unlock;
-		}
-
-		schedstat_inc(p->se.statistics.nr_wakeups_secb_no_nrg_sav);
-		schedstat_inc(this_rq()->eas_stats.secb_no_nrg_sav);
-		target_cpu = prev_cpu;
-		goto unlock;
-	}
-
-	schedstat_inc(p->se.statistics.nr_wakeups_secb_count);
-	schedstat_inc(this_rq()->eas_stats.secb_count);
-
-unlock:
-	rcu_read_unlock();
-	trace_sched_task_util(p, next_cpu, backup_cpu, target_cpu,
-			      fbt_env.need_idle, fastpath,
-			      fbt_env.placement_boost, rtg_target ?
-			      cpumask_first(rtg_target) : -1, start_t);
-	return target_cpu;
-}
-
 static inline bool nohz_kick_needed(struct rq *rq, bool only_update);
 static void nohz_balancer_kick(bool only_update);
 
@@ -8404,8 +8281,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	int new_cpu = prev_cpu;
 	int want_affine = 0;
 	int sync = (wake_flags & WF_SYNC) && !(current->flags & PF_EXITING);
-
-	bool boosted = task_is_boosted(p);
 
 	if (sd_flag & SD_BALANCE_WAKE) {
 
@@ -9840,7 +9715,6 @@ void update_group_capacity(struct sched_domain *sd, int cpu)
 		 */
 
 		for_each_cpu(cpu, sched_group_cpus(sdg)) {
-			unsigned long cpu_cap = capacity_of(cpu);
 
 			if (cpumask_test_cpu(cpu, cpu_isolated_mask))
 				continue;
@@ -9857,7 +9731,6 @@ void update_group_capacity(struct sched_domain *sd, int cpu)
 		group = child->groups;
 		do {
 			struct sched_group_capacity *sgc = group->sgc;
-			cpumask_t *cpus = sched_group_cpus(group);
 
 			capacity += sgc->capacity;
 			min_capacity = min(sgc->min_capacity, min_capacity);
