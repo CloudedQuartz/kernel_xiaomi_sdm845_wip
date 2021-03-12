@@ -110,7 +110,7 @@ SCHED_FEAT(SCHEDTUNE_BOOST_UTIL, false)
  * Use the Simplified Energy Model for EAS accounting only for
  * active costs of CPUs.
  */
-SCHED_FEAT(EAS_SIMPLIFIED_EM, true)
+SCHED_FEAT(EAS_SIMPLIFIED_EM, false)
 
 /*
  * Request max frequency from schedutil whenever a RT task is running.
