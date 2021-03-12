@@ -1905,7 +1905,6 @@ static int rt_energy_aware_wake_cpu(struct task_struct *task)
 	unsigned long util, best_cpu_util = ULONG_MAX;
 	unsigned long best_cpu_util_cum = ULONG_MAX;
 	unsigned long util_cum;
-	unsigned long tutil = task_util(task);
 	int best_cpu_idle_idx = INT_MAX;
 	int cpu_idle_idx = -1, start_cpu;
 #ifdef CONFIG_SCHED_WALT
@@ -2012,7 +2011,6 @@ static int find_lowest_rq(struct task_struct *task)
 	unsigned long util, best_cpu_util = ULONG_MAX;
 	unsigned long best_cpu_util_cum = ULONG_MAX;
 	unsigned long util_cum;
-	unsigned long tutil = task_util(task);
 	int best_cpu_idle_idx = INT_MAX;
 	int cpu_idle_idx = -1;
 	enum sched_boost_policy placement_boost;
