@@ -9399,36 +9399,6 @@ static inline int get_sd_load_idx(struct sched_domain *sd,
 	return load_idx;
 }
 
-static unsigned long scale_rt_capacity(int cpu)
-{
-	struct rq *rq = cpu_rq(cpu);
-	unsigned long max = arch_scale_cpu_capacity(NULL, cpu);
-	unsigned long used, free;
-#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING)
-	unsigned long irq;
-#endif
-
-#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING)
-	irq = READ_ONCE(rq->avg_irq.util_avg);
-
-	if (unlikely(irq >= max))
-		return 1;
-#endif
-
-	used = READ_ONCE(rq->avg_rt.util_avg);
-	used += READ_ONCE(rq->avg_dl.util_avg);
-
-	if (unlikely(used >= max))
-		return 1;
-
-	free = max - used;
-#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING)
-	free *= (max - irq);
-	free /= max;
-#endif
-	return free;
-}
-
 void init_max_cpu_capacity(struct max_cpu_capacity *mcc)
 {
 	raw_spin_lock_init(&mcc->lock);
