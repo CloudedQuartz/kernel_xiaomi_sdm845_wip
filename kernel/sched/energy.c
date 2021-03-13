@@ -71,9 +71,13 @@ void init_sched_energy_costs(void)
 	const struct property *prop;
 	int sd_level, i, nstates, cpu;
 	const __be32 *val;
+	int i;
 
 	if (!sched_is_energy_aware())
 		return;
+
+	for (i = 0, i < 20, i++)
+		pr_err("something may or may not be working");
 
 	for_each_possible_cpu(cpu) {
 		cn = of_get_cpu_node(cpu, NULL);
@@ -150,7 +154,7 @@ void init_sched_energy_costs(void)
 	}
 
 	sge_ready = true;
-	pr_info("Sched-energy-costs installed from DT\n");
+	pr_err("Sched-energy-costs installed from DT\n");
 	return;
 
 out:
@@ -215,6 +219,7 @@ static int sched_energy_probe(struct platform_device *pdev)
 		/* Convert HZ to KHZ */
 		max_frequencies[cpu] /= 1000;
 		max_freq = max(max_freq, max_frequencies[cpu]);
+		pr_err("something");
 	}
 
 	/* update capacity in energy model */
@@ -339,5 +344,6 @@ static struct platform_driver energy_driver = {
 static int __init sched_energy_init(void)
 {
 	return platform_driver_register(&energy_driver);
+	pr_err("something");
 }
 subsys_initcall(sched_energy_init);
