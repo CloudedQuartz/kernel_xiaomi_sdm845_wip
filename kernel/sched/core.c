@@ -10252,18 +10252,25 @@ static ssize_t cpu_uclamp_write(struct kernfs_open_file *of, char *buf,
 	return nbytes;
 }
 
+static ssize_t cpu_uclamp_write_wrapper(struct kernfs_open_file *of, char *buf,
+										size_t nbytes, loff_t off,
+										enum uclamp_id clamp_id)
+{
+	return cpu_uclamp_write(of, buf, nbytes, off, clamp_id);
+}
+
 ssize_t cpu_uclamp_min_write(struct kernfs_open_file *of,
 				    char *buf, size_t nbytes,
 				    loff_t off)
 {
-	return cpu_uclamp_write(of, buf, nbytes, off, UCLAMP_MIN);
+	return cpu_uclamp_write_wrapper(of, buf, nbytes, off, UCLAMP_MIN);
 }
 
 ssize_t cpu_uclamp_max_write(struct kernfs_open_file *of,
 				    char *buf, size_t nbytes,
 				    loff_t off)
 {
-	return cpu_uclamp_write(of, buf, nbytes, off, UCLAMP_MAX);
+	return cpu_uclamp_write_wrapper(of, buf, nbytes, off, UCLAMP_MAX);
 }
 
 static inline void cpu_uclamp_print(struct seq_file *sf,
