@@ -1837,49 +1837,45 @@ static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
 		{ "background",		"20", "max",	0, 0 },
 		{ "system-background",	"0",  "40",	0, 0 },
 	};
-	const char *cpuset_cgroup_name = cs->css.cgroup->kn->name;
 #endif
 
 #if defined (CONFIG_CPUSET_ASSIST) || (CONFIG_UCLAMP_ASSIST)
 	struct cpuset *cs = css_cs(of_css(of));
-	int i, j;
+	int i;
 	char _uclamp_value;
+	const char *cpuset_cgroup_name = cs->css.cgroup->kn->name;
 
 	if (!strcmp(current->comm, "init")) {
+#ifdef CONFIG_CPUSET_ASSIST
 		for (i = 0; i < ARRAY_SIZE(cs_targets); i++) {
 			struct cs_target cs_tgt = cs_targets[i];
-
 			if (!strcmp(cpuset_cgroup_name, cs_tgt.name)) {
-#ifdef CONFIG_UCLAMP_ASSIST
-				for (j = 0; j < ARRAY_SIZE(uc_targets); j++) {
-					struct uc_target uc_tgt = uc_targets[j];
-					if (!strcmp(cpuset_cgroup_name, uc_tgt.name)) {
-						cpu_uclamp_min_write_wrapper(
-							of, strcpy(&_uclamp_value, uc_tgt.uclamp_min), nbytes, off);
-						cpu_uclamp_max_write_wrapper(
-							of, strcpy(&_uclamp_value, uc_tgt.uclamp_max), nbytes, off);
-						cpu_uclamp_ls_write_u64_wrapper(
-							&cs->css, NULL, uc_tgt.uclamp_latency_sensitive);
-						cpu_uclamp_boost_write_u64_wrapper(
-							&cs->css, NULL, uc_tgt.uclamp_boosted);
-						break;
-					}
-				}
-#endif /*CONFIG_UCLAMP_ASSIST*/
-
-#ifdef CONFIG_CPUSET_ASSIST
 				return cpuset_write_resmask_assist(of, cs_tgt, nbytes, off);
+			}
+		}
 #endif
+#ifdef CONFIG_UCLAMP_ASSIST
+		for (i = 0; i < ARRAY_SIZE(uc_targets); i++) {
+			struct uc_target uc_tgt = uc_targets[i];
+			if (!strcmp(cpuset_cgroup_name, uc_tgt.name)) {
+				cpu_uclamp_min_write_wrapper(
+					of, strcpy(&_uclamp_value, uc_tgt.uclamp_min), nbytes, off);
+				cpu_uclamp_max_write_wrapper(
+					of, strcpy(&_uclamp_value, uc_tgt.uclamp_max), nbytes, off);
+				cpu_uclamp_ls_write_u64_wrapper(
+					&cs->css, NULL, uc_tgt.uclamp_latency_sensitive);
+				cpu_uclamp_boost_write_u64_wrapper(
+					&cs->css, NULL, uc_tgt.uclamp_boosted);
+				break;
 			}
 		}
 	}
+#endif /*CONFIG_UCLAMP_ASSIST*/
 #endif /*CONFIG_CPUSET_ASSIST || CONFIG_UCLAMP_ASSIST*/
 
-#ifndef CONFIG_CPUSET_ASSIST
 	buf = strstrip(buf);
 
 	return cpuset_write_resmask(of, buf, nbytes, off);
-#endif
 }
 
 /*
