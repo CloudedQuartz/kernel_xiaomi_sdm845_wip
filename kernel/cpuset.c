@@ -1807,11 +1807,11 @@ out_unlock:
 }
 
 static ssize_t cpuset_write_resmask_assist(struct kernfs_open_file *of,
-					   struct cs_target tgt, size_t nbytes,
+					   struct cs_target cs_tgt, size_t nbytes,
 					   loff_t off)
 {
-	pr_info("cpuset_assist: setting %s to %s\n", tgt.name, tgt.cpus);
-	return cpuset_write_resmask(of, tgt.cpus, nbytes, off);
+	pr_info("cpuset_assist: setting %s to %s\n", cs_tgt.name, cs_tgt.cpus);
+	return cpuset_write_resmask(of, cs_tgt.cpus, nbytes, off);
 }
 
 static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
@@ -1837,11 +1837,11 @@ static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
 		{ "background",		"20", "max",	0, 0 },
 		{ "system-background",	"0",  "40",	0, 0 },
 	};
+	const char *cpuset_cgroup_name = cs->css.cgroup->kn->name;
 #endif
 
 #if defined (CONFIG_CPUSET_ASSIST) || (CONFIG_UCLAMP_ASSIST)
 	struct cpuset *cs = css_cs(of_css(of));
-	const char *cpuset_cgroup_name = cs->css.cgroup->kn->name;
 	int i, j;
 	char _uclamp_value;
 
