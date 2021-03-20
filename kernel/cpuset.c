@@ -134,7 +134,7 @@ struct cpuset {
 	int relax_domain_level;
 };
 
-#ifdef CONFIG_CPUSET_ASSIST
+#if defined (CONFIG_CPUSET_ASSIST) || (CONFIG_UCLAMP_ASSIST)
 struct cs_target {
 	const char *name;
 	char *cpus;
@@ -1827,6 +1827,8 @@ static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
 		{ "system-background",	CONFIG_CPUSET_SYSTEM_BG },
 		{ "top-app",		CONFIG_CPUSET_TOP_APP },
 	};
+#endif
+
 #ifdef CONFIG_UCLAMP_ASSIST
 	static struct uc_target uc_targets[] = {
 		{ "top-app",		"10", "max",	1, 1 },
@@ -1836,13 +1838,12 @@ static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
 		{ "system-background",	"0",  "40",	0, 0 },
 	};
 #endif
+
+#if defined (CONFIG_CPUSET_ASSIST) || (CONFIG_UCLAMP_ASSIST)
 	struct cpuset *cs = css_cs(of_css(of));
 	const char *cpuset_cgroup_name = cs->css.cgroup->kn->name;
-	int i;
-#ifdef CONFIG_UCLAMP_ASSIST
-	int j;
+	int i, j;
 	char _uclamp_value;
-#endif
 
 	if (!strcmp(current->comm, "init")) {
 		for (i = 0; i < ARRAY_SIZE(cs_targets); i++) {
@@ -1864,16 +1865,21 @@ static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
 						break;
 					}
 				}
-#endif
+#endif /*CONFIG_UCLAMP_ASSIST*/
+
+#ifdef CONFIG_CPUSET_ASSIST
 				return cpuset_write_resmask_assist(of, cs_tgt, nbytes, off);
+#endif
 			}
 		}
 	}
-#endif
+#endif /*CONFIG_CPUSET_ASSIST || CONFIG_UCLAMP_ASSIST*/
 
+#ifndef CONFIG_CPUSET_ASSIST
 	buf = strstrip(buf);
 
 	return cpuset_write_resmask(of, buf, nbytes, off);
+#endif
 }
 
 /*

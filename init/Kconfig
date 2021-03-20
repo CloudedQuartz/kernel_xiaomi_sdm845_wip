@@ -1187,7 +1187,6 @@ config UCLAMP_ASSIST
 	depends on CPUSETS
 	depends on ANDROID
 	depends on UCLAMP_TASK_GROUP
-	depends on CPUSET_ASSIST
 	help
 	  This option enables in-kernel overrides for uclamp values.
 
