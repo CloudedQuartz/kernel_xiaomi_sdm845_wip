@@ -743,6 +743,16 @@ config UCLAMP_BUCKETS_COUNT
 
 	  If in doubt, use the default value of 5.
 
+config UCLAMP_ASSIST
+	bool "Uclamp configuration helper"
+	depends on CPUSETS
+	depends on ANDROID
+	depends on UCLAMP_TASK_GROUP
+	depends on CPUSET_ASSIST
+	help
+	  This option enables setting default uclamp values.
+	  If unsure, say N.
+
 endmenu
 
 #

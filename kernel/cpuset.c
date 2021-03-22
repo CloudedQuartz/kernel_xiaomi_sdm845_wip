@@ -1700,7 +1700,7 @@ out_unlock:
 	return retval;
 }
 
-#ifdef CONFIG_UCLAMP_TASK
+#ifdef CONFIG_UCLAMP_ASSIST
 static void uclamp_set(struct kernfs_open_file *of,
 		size_t nbytes, loff_t off);
 #endif
@@ -1765,7 +1765,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
 
 	free_trial_cpuset(trialcs);
 
-#ifdef CONFIG_UCLAMP_TASK
+#ifdef CONFIG_UCLAMP_ASSIST
 	uclamp_set(of, nbytes, off);
 #endif
 out_unlock:
@@ -2066,7 +2066,7 @@ static struct cftype files[] = {
 	{ }	/* terminate */
 };
 
-#ifdef CONFIG_UCLAMP_TASK
+#ifdef CONFIG_UCLAMP_ASSIST
 struct ucl_param {
 	char *name;
 	char uclamp_min[3];
