@@ -218,8 +218,6 @@ source "drivers/halls/Kconfig"
 
 source "drivers/dts_eagle/Kconfig"
 
-source "drivers/energy_model/Kconfig"
-
 source "drivers/opp/Kconfig"
 
 endmenu
