@@ -20,7 +20,7 @@ export TZ='IST'
 
 KERNEL_IMG=$KERNEL_DIR/out/arch/$ARCH/boot/Image.gz-dtb
 
-TG_CHAT_ID="$CHAT_ID"
+TG_CHAT_ID="1139604865"
 TG_BOT_TOKEN="$BOT_API_KEY"
 # End config
 
