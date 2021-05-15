@@ -97,8 +97,8 @@ build_end() {
 
 	# Sign zip if java is available
 	if command -v java > /dev/null 2>&1; then
-		curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel2/master/zipsigner-3.0.jar
-		java -jar zipsigner-3.0.jar "$ZIP_NAME".zip "$ZIP_NAME"-signed.zip
+		curl -sLo zipsigner-4.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel3/master/zipsigner-4.0.jar
+		java -jar zipsigner-4.0.jar "$ZIP_NAME".zip "$ZIP_NAME"-signed.zip
 		ZIP_NAME="$ZIP_NAME-signed.zip"
 	fi
 
