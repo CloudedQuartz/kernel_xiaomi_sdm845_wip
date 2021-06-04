@@ -95,12 +95,7 @@ build_end() {
 	ZIP_NAME=$KERNELNAME-$1-$COMMIT_SHA-$(date +%Y-%m-%d_%H%M)-UTC
 	zip -r9 "$ZIP_NAME".zip ./* -x .git README.md ./*placeholder
 
-	# Sign zip if java is available
-	if command -v java > /dev/null 2>&1; then
-		curl -sLo zipsigner-4.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel3/master/zipsigner-4.0.jar
-		java -jar zipsigner-4.0.jar "$ZIP_NAME".zip "$ZIP_NAME"-signed.zip
-		ZIP_NAME="$ZIP_NAME-signed.zip"
-	fi
+	ZIP_NAME="$ZIP_NAME.zip"
 
 	tg_pushzip "$ZIP_NAME" "Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code>"
 	echo -e "\n> Sent zip through Telegram.\n> File: $ZIP_NAME"
